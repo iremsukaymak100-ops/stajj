@@ -12,20 +12,30 @@ export default function AdminLogin() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setError('');
     
-    // Simulating a small delay for premium feel
-    setTimeout(() => {
-      if (password === 'irem123') {
+    try {
+      const response = await fetch('/api/admin/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password })
+      });
+
+      if (response.ok) {
         localStorage.setItem('admin_auth', 'true');
         router.push('/admin/dashboard');
       } else {
-        setError('Geçersiz şifre. Lütfen tekrar deneyin.');
+        const data = await response.json();
+        setError(data.error || 'Geçersiz şifre. Lütfen tekrar deneyin.');
         setLoading(false);
       }
-    }, 600);
+    } catch {
+      setError('Bağlantı hatası. Lütfen daha sonra tekrar deneyin.');
+      setLoading(false);
+    }
   };
 
   return (

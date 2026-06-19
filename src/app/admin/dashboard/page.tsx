@@ -23,7 +23,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 export default function AdminDashboard() {
   const [mechanisms, setMechanisms] = useState<Mechanism[]>([]);
   const [loading, setLoading] = useState(true);
-  const [authorized, setAuthorized] = useState(false);
+  const [authorized, setAuthorized] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('admin_auth') === 'true';
+    }
+    return false;
+  });
   
   // Form State
   const [title, setTitle] = useState('');
@@ -63,18 +68,20 @@ export default function AdminDashboard() {
   }, []);
 
   useEffect(() => {
-    const auth = localStorage.getItem('admin_auth');
-    if (auth !== 'true') {
+    if (!authorized) {
       router.push('/admin');
-      return;
+    } else {
+      const timer = setTimeout(() => {
+        fetchMechanisms();
+        fetchMessages();
+      }, 0);
+      return () => clearTimeout(timer);
     }
-    setAuthorized(true);
-    fetchMechanisms();
-    fetchMessages();
-  }, [router, fetchMechanisms, fetchMessages]);
+  }, [router, authorized, fetchMechanisms, fetchMessages]);
 
   const handleLogout = () => {
     localStorage.removeItem('admin_auth');
+    setAuthorized(false);
     router.push('/admin');
   };
 
@@ -356,7 +363,7 @@ export default function AdminDashboard() {
               </div>
               
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                {messages.length > 0 ? messages.map((msg: any) => (
+                {messages.length > 0 ? messages.map((msg) => (
                   <div key={msg.id} className="glass" style={{ 
                     padding: '2.5rem', 
                     border: '1px solid var(--border)',

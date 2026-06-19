@@ -1,12 +1,17 @@
 export const dynamic = 'force-dynamic';
 import { Suspense } from 'react';
 import Header from '@/components/Header';
-import MechanismCard from '@/components/MechanismCard';
+import ClientMechanismList from '@/components/ClientMechanismList';
 import ContactForm from '@/components/ContactForm';
-import { supabase, Mechanism } from '@/lib/supabase';
+import { supabase, Mechanism, isMock } from '@/lib/supabase';
+import * as db from '@/lib/db';
 import { MousePointer2, Sparkles } from 'lucide-react';
 
 async function getMechanisms() {
+  if (isMock) {
+    return await db.getMechanisms() as Mechanism[];
+  }
+
   const { data, error } = await supabase
     .from('programming_logic_items')
     .select('*')
@@ -89,7 +94,7 @@ export default async function Home() {
                   Mantık Müzesi, programlama mantığının karmaşık dünyasını herkes için anlaşılır ve görsel olarak etkileyici bir hale getirmeyi amaçlayan bir staj projesidir.
                 </p>
                 <p style={{ fontSize: '1.1rem', color: 'var(--text-secondary)' }}>
-                  Burada, kodların arkasındaki "niçin"leri ve "nasıl"ları keşfedecek, algoritmaların sadece matematikten ibaret olmadığını, aynı zamanda birer mimari yapı olduğunu göreceksiniz.
+                  {'Burada, kodların arkasındaki "niçin"leri ve "nasıl"ları keşfedecek, algoritmaların sadece matematikten ibaret olmadığını, aynı zamanda birer mimari yapı olduğunu göreceksiniz.'}
                 </p>
               </div>
               <div style={{ background: 'var(--accent-light)', padding: '2rem', borderRadius: '16px', border: '1px solid var(--border)' }}>
@@ -168,20 +173,6 @@ async function MechanismList() {
   const mechanisms = await getMechanisms();
   
   return (
-    <div style={{ 
-      display: 'grid', 
-      gridTemplateColumns: 'repeat(auto-fill, minmax(400px, 1fr))', 
-      gap: '2.5rem' 
-    }}>
-      {mechanisms.length > 0 ? (
-        mechanisms.map((m) => (
-          <MechanismCard key={m.id} mechanism={m} />
-        ))
-      ) : (
-        <div style={{ textAlign: 'center', gridColumn: '1 / -1', padding: '4rem' }}>
-          <p>Henüz içerik eklenmemiş. Lütfen Admin panelinden ekleme yapın.</p>
-        </div>
-      )}
-    </div>
+    <ClientMechanismList initialMechanisms={mechanisms} />
   );
 }
